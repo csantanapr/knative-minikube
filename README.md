@@ -21,9 +21,6 @@ kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_
 kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.2/istio-minimal.yaml
 ```
 
-```bash
-kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.2/istio-knative-extras.yaml
-```
 
 Verify Istio is Running
 ```bash
