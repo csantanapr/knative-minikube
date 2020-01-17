@@ -135,6 +135,8 @@ NAME    URL                                        LATESTCREATED   LATESTREADY  
 hello   http://hello.default.10.96.176.21.nip.io   hello-kpkxt     hello-kpkxt   True
 ```
 
+Note: If the output above resolves to "False" in the "READY" column, delete the service and reapply it. There may have been an issue with knative not being ready before the service was built
+
 Test the App
 ```bash
 curl $(kubectl get ksvc hello -o jsonpath='{.status.url}')
