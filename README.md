@@ -43,14 +43,15 @@ Get the `EXTERNAL-IP` for the istio-ingressgateway
 kubectl get svc istio-ingressgateway -n istio-system
 ```
 
-Save the IP Address Value in environment variable `INGRESS_HOST`
-```bash
-export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+Output should be:
+```
+NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                                      AGE
+istio-ingressgateway   LoadBalancer   10.96.147.24   10.96.147.24   15020:31149/TCP,80:32309/TCP,443:30119/TCP   11m
 ```
 
-It will print the IP Address, for example
-```
-10.96.176.21
+Save the IP Address Value in an environment variable `INGRESS_HOST`
+```bash
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
 
 ### Install Knative
@@ -93,7 +94,7 @@ webhook-6f97457cbf-sxxxq            1/1     Running   0          8m14s
 
 ## Configure Knative
 
-Setup domain name to use the External IP Address of the ingressgateway above
+Setup domain name to use the External IP Address of the istio-ingressgateway service above
 
 ```bash
 export KNATIVE_DOMAIN="$INGRESS_HOST.nip.io"
@@ -136,10 +137,10 @@ hello   http://hello.default.10.96.176.21.nip.io   hello-kpkxt     hello-kpkxt  
 
 Test the App
 ```bash
-curl http://hello.default.10.96.176.21.nip.io
+curl $(kubectl get ksvc hello -o jsonpath='{.status.url}')
 ```
 
-Output should be
+Output should be:
 ```
 Hello Go Sample v1!
 ```
@@ -149,8 +150,13 @@ Check the knative pods that scaled from zero
 kubectl get pod -l serving.knative.dev/service=hello
 ```
 
-Output should be
+Output should be:
 ```
 NAME                                      READY   STATUS    RESTARTS   AGE
 hello-kpkxt-deployment-78c9b8c9cf-zrht8   2/2     Running   0          6s
+```
+
+Try the service `url` on your browser
+```
+open $(kubectl get ksvc hello -o jsonpath='{.status.url}')
 ```
