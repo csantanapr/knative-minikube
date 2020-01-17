@@ -43,9 +43,9 @@ Get the `EXTERNAL-IP` for the istio-ingressgateway
 kubectl get svc istio-ingressgateway -n istio-system
 ```
 
-Or to get only the IP value run:
+Save the IP Address Value in environment variable `INGRESS_HOST`
 ```bash
-kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
 
 It will print the IP Address, for example
@@ -96,7 +96,7 @@ webhook-6f97457cbf-sxxxq            1/1     Running   0          8m14s
 Setup domain name to use the External IP Address of the ingressgateway above
 
 ```bash
-export KNATIVE_DOMAIN="10.96.176.21.nip.io"
+export KNATIVE_DOMAIN="$INGRESS_HOST.nip.io"
 ```
 
 ```bash
@@ -125,7 +125,7 @@ EOF
 
 Verify status of Knative Service
 ```bash
-kubectl get ksvc
+kubectl get ksvc -w
 ```
 
 Output should be:
@@ -133,9 +133,6 @@ Output should be:
 NAME    URL                                        LATESTCREATED   LATESTREADY   READY   REASON
 hello   http://hello.default.10.96.176.21.nip.io   hello-kpkxt     hello-kpkxt   True
 ```
-
-Note: If the service is not ready and RevisionMissing then wait a minute or two.
-
 
 Test the App
 ```bash
