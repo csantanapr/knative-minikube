@@ -141,9 +141,11 @@ spec:
     spec:
       containers:
         - image: gcr.io/knative-samples/helloworld-go
+          ports:
+            - containerPort: 8080
           env:
             - name: TARGET
-              value: "Go Sample v1"
+              value: "Knative"
 EOF
 ```
 
@@ -170,7 +172,7 @@ curl $(kubectl get ksvc hello -o jsonpath='{.status.url}')
 
 Output should be:
 ```
-Hello Go Sample v1!
+Hello Knative!
 ```
 
 Check the knative pods that scaled from zero
