@@ -201,10 +201,6 @@ hello-jm665-deployment-68d5444d59-5hfsl   2/2     Running
 hello-jm665-deployment-68d5444d59-5hfsl   2/2     Terminating
 hello-jm665-deployment-68d5444d59-5hfsl   1/2     Terminating
 hello-jm665-deployment-68d5444d59-5hfsl   0/2     Terminating
-hello-jm665-deployment-68d5444d59-4rxqt   0/2     Pending
-hello-jm665-deployment-68d5444d59-4rxqt   0/2     ContainerCreating
-hello-jm665-deployment-68d5444d59-4rxqt   1/2     Running
-hello-jm665-deployment-68d5444d59-4rxqt   2/2     Running
 ```
 
 You can access the url again, and you will see the new pods running again.
