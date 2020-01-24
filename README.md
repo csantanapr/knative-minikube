@@ -1,7 +1,29 @@
 # Setup Knative for Development with Minikube
 
+>Updated and verified on Jan 24, 2020 with Knative version 0.12
+
 ## Setup Minikube
 
+Make sure you have a recent version of minikube:
+```
+minikube update-check
+```
+
+Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
+```
+minikube config set kubernetes-version v1.17.2
+```
+
+>I recommend using the hyperkit vm driver is available in your platform.
+
+>The default configuration for memory of `2GB` and `4 cpus`, should work fine, if you want to increase it you can do it with `minikube config` command
+
+If you think you have some configuration and want to start with a clean environment you can delete the VM:
+```
+minikube delete
+```
+
+Now star the minikube vm
 ```
 minikube start
 ```
@@ -10,6 +32,8 @@ In a new terminal run
 ```
 minikube tunnel
 ```
+
+You can check out other addons and settings using `minikube`
 
 ## Install Istio (Lean)
 
@@ -59,7 +83,7 @@ export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -
 
 Select the version of Knative Serving to install
 ```bash
-export KNATIVE_VERSION="0.11.0"
+export KNATIVE_VERSION="0.12.0"
 ```
 
 Install crds
@@ -129,10 +153,13 @@ Verify status of Knative Service until is Ready
 kubectl get ksvc -w
 ```
 
-Output should be:
+Wait util column `READY` is `True` it might take a minute or two:
 ```
-NAME    URL                                        LATESTCREATED   LATESTREADY   READY   REASON
-hello   http://hello.default.10.96.176.21.nip.io   hello-kpkxt     hello-kpkxt   True
+NAME    URL                                          LATESTCREATED   LATESTREADY   READY     REASON
+hello   http://hello.default.10.108.164.193.nip.io   hello-jm665                   Unknown   RevisionMissing
+hello   http://hello.default.10.108.164.193.nip.io   hello-jm665     hello-jm665   Unknown   RevisionMissing
+hello   http://hello.default.10.108.164.193.nip.io   hello-jm665     hello-jm665   Unknown   IngressNotConfigured
+hello   http://hello.default.10.108.164.193.nip.io   hello-jm665     hello-jm665   True
 ```
 
 
@@ -162,4 +189,33 @@ Try the service `url` on your browser
 open $(kubectl get ksvc hello -o jsonpath='{.status.url}')
 ```
 
-If you have issues with this instructions open an issue please 🙏🏻
+You can watch the pods and see how they scale down to zero after http traffic stops to the url
+```
+kubectl get pod -l serving.knative.dev/service=hello -w
+```
+
+Output should look like this:
+```
+NAME                                      READY   STATUS
+hello-jm665-deployment-68d5444d59-5hfsl   2/2     Running
+hello-jm665-deployment-68d5444d59-5hfsl   2/2     Terminating
+hello-jm665-deployment-68d5444d59-5hfsl   1/2     Terminating
+hello-jm665-deployment-68d5444d59-5hfsl   0/2     Terminating
+hello-jm665-deployment-68d5444d59-4rxqt   0/2     Pending
+hello-jm665-deployment-68d5444d59-4rxqt   0/2     ContainerCreating
+hello-jm665-deployment-68d5444d59-4rxqt   1/2     Running
+hello-jm665-deployment-68d5444d59-4rxqt   2/2     Running
+```
+
+You can access the url again, and you will see the new pods running again.
+```
+NAME                                      READY   STATUS
+hello-jm665-deployment-68d5444d59-4rxqt   0/2     Pending
+hello-jm665-deployment-68d5444d59-4rxqt   0/2     ContainerCreating
+hello-jm665-deployment-68d5444d59-4rxqt   1/2     Running
+hello-jm665-deployment-68d5444d59-4rxqt   2/2     Running
+```
+
+Some people call this **Serverless** 🎉 🌮 🔥
+
+If you have any issues with this instructions [open an new issue](https://github.com/csantanapr/knative-minikube/issues/new) please 🙏🏻
