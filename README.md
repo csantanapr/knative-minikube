@@ -2,6 +2,17 @@
 
 >Updated and verified on Jan 24, 2020 with Knative version 0.12
 
+## Install Minikube
+
+On MacOS
+```bash
+brew install minikube
+```
+
+For more information installing or using minikube checkout the docs https://minikube.sigs.k8s.io/docs/start/
+
+
+
 ## Setup Minikube
 
 Make sure you have a recent version of minikube:
@@ -18,6 +29,9 @@ minikube config set kubernetes-version v1.17.2
 
 >The default configuration for memory of `2GB` and `4 cpus`, should work fine, if you want to increase it you can do it with `minikube config` command
 
+## Sart Minikube
+
+
 If you think you have some configuration and want to start with a clean environment you can delete the VM:
 ```
 minikube delete
@@ -27,6 +41,8 @@ Now star the minikube vm
 ```
 minikube start
 ```
+
+>If your VM doesn't start and gets stuck, check that your are not connected using a VPN such as Cisco VPN AnyConnect, this vpn client affects networking and avoids many kubernetes environmentes (ie minikube, minishift) from starting.
 
 In a new terminal run
 ```
