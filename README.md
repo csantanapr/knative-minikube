@@ -89,7 +89,7 @@ NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)     
 istio-ingressgateway   LoadBalancer   10.96.147.24   10.96.147.24   15020:31149/TCP,80:32309/TCP,443:30119/TCP   11m
 ```
 
-Save the IP Address Value in an environment variable `INGRESS_HOST`
+Save the `EXTERNAL-IP` address value in an environment variable `INGRESS_HOST`
 ```bash
 export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
