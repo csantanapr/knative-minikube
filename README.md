@@ -1,6 +1,6 @@
 # Setup Knative with Minikube
 
->Updated and verified on Jan 24, 2020 with Knative version 0.12
+>Updated and verified on Feb, 2020 with Knative version 0.12
 
 ## Install Minikube
 
@@ -49,7 +49,7 @@ In a new terminal run
 minikube tunnel
 ```
 
-You can check out other addons and settings using `minikube`
+You can check out other addons and settings using `minikube addon list`
 
 ## Install Istio (Lean)
 
