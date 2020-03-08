@@ -95,6 +95,7 @@ webhook-6f97457cbf-sxxxq            1/1     Running   0          8m14s
 
 ## Install Istio (Lean)
 Startig with Knative version `0.13` you can choose from multiple networing layers like Istio, Contour, Kourier, and Ambasador.
+More info [#installing-the-serving-component](https://knative.dev/docs/install/any-kubernetes-cluster/#installing-the-serving-component)
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.4/istio-crds.yaml
