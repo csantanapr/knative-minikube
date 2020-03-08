@@ -1,6 +1,9 @@
 # Setup Knative with Minikube
 
->Updated and verified on Feb, 2020 with Knative version 0.12
+>Updated and verified on March 8th, 2020 with:
+>- Knative version 0.13
+>- Minikube version 1.8.1
+>- Kubernetes version 1.17.3
 
 ## Install Minikube
 
@@ -22,12 +25,16 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.17.2
+minikube config set kubernetes-version v1.17.3
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The default configuration for memory of `2GB` and `4 cpus`, should work fine, if you want to increase it you can do it with `minikube config` command
+>The default configuration for memory of `2GB` and `2 cpus`, should work fine, if you want to change the values you can do it with `minikube config` for example:
+```
+minikube config set memory 2048
+minikube config set cpus 4
+```
 
 ## Sart Minikube
 
@@ -51,14 +58,50 @@ minikube tunnel
 
 You can check out other addons and settings using `minikube addon list`
 
+
+### Install Knative
+
+
+Select the version of Knative Serving to install
+```bash
+export KNATIVE_VERSION="0.13.0"
+```
+
+Install crds
+```bash
+kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
+```
+
+Install the controller
+```bash
+kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-core.yaml
+```
+
+Verify that app pods for Knative serving are Running
+```
+kubectl get pods --namespace knative-serving -w
+```
+
+Output should be:
+```
+NAME                                READY   STATUS    RESTARTS   AGE
+activator-7db6679666-fwtxh          1/1     Running   0          8m15s
+autoscaler-ffc9f79b4-qtpgv          1/1     Running   0          8m15s
+autoscaler-hpa-5994dfdb67-tfbrr     1/1     Running   0          8m15s
+controller-6797f99458-9qxql         1/1     Running   0          8m14s
+networking-istio-85484dc749-fnc2p   1/1     Running   0          8m14s
+webhook-6f97457cbf-sxxxq            1/1     Running   0          8m14s
+```
+
 ## Install Istio (Lean)
+Startig with Knative version `0.13` you can choose from multiple networing layers like Istio, Contour, Kourier, and Ambasador.
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.2/istio-crds.yaml
+kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.4/istio-crds.yaml
 ```
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.2/istio-minimal.yaml
+kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.4/istio-minimal.yaml
 ```
 
 
@@ -94,55 +137,26 @@ Save the `EXTERNAL-IP` address value in an environment variable `INGRESS_HOST`
 export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
 
-### Install Knative
+
+## Configure Knative for Istio
 
 
-Select the version of Knative Serving to install
-```bash
-export KNATIVE_VERSION="0.12.0"
+Since we are using Istio, we need to install  Knative Istio controller.
+
+```
+kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-istio.yaml
 ```
 
-Install crds
-```bash
-kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
-```
-
-Install the controller
-```bash
-kubectl apply \
---selector networking.knative.dev/certificate-provider!=cert-manager \
---filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving.yaml
-```
-
-Verify that app pods for Knative serving are Running
-```
-kubectl get pods --namespace knative-serving -w
-```
-
-Output should be:
-```
-NAME                                READY   STATUS    RESTARTS   AGE
-activator-7db6679666-fwtxh          1/1     Running   0          8m15s
-autoscaler-ffc9f79b4-qtpgv          1/1     Running   0          8m15s
-autoscaler-hpa-5994dfdb67-tfbrr     1/1     Running   0          8m15s
-controller-6797f99458-9qxql         1/1     Running   0          8m14s
-networking-istio-85484dc749-fnc2p   1/1     Running   0          8m14s
-webhook-6f97457cbf-sxxxq            1/1     Running   0          8m14s
-```
-
-
-
-## Configure Knative
-
+Optional: You can manually configure the config map domain names.
 Setup domain name to use the External IP Address of the istio-ingressgateway service above
-
 ```bash
 export KNATIVE_DOMAIN="$INGRESS_HOST.nip.io"
 ```
-
 ```bash
 kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
 ```
+
+
 
 ## Deploy Knative Application
 
@@ -199,7 +213,7 @@ kubectl get pod -l serving.knative.dev/service=hello
 Output should be:
 ```
 NAME                                      READY   STATUS    RESTARTS   AGE
-hello-kpkxt-deployment-78c9b8c9cf-zrht8   2/2     Running   0          6s
+hello-jg94h-deployment-9d998db95-f6klc   2/2     Running   0          6s
 ```
 
 Try the service `url` on your browser
@@ -214,20 +228,20 @@ kubectl get pod -l serving.knative.dev/service=hello -w
 
 Output should look like this:
 ```
-NAME                                      READY   STATUS
-hello-jm665-deployment-68d5444d59-5hfsl   2/2     Running
-hello-jm665-deployment-68d5444d59-5hfsl   2/2     Terminating
-hello-jm665-deployment-68d5444d59-5hfsl   1/2     Terminating
-hello-jm665-deployment-68d5444d59-5hfsl   0/2     Terminating
+NAME                                     READY   STATUS
+hello-jg94h-deployment-9d998db95-f6klc   2/2     Running
+hello-jg94h-deployment-9d998db95-f6klc   2/2     Terminating
+hello-jg94h-deployment-9d998db95-f6klc   1/2     Terminating
+hello-jg94h-deployment-9d998db95-f6klc   0/2     Terminating
 ```
 
-You can access the url again, and you will see the new pods running again.
+Try to access the url again, and you will see the new pods running again.
 ```
-NAME                                      READY   STATUS
-hello-jm665-deployment-68d5444d59-4rxqt   0/2     Pending
-hello-jm665-deployment-68d5444d59-4rxqt   0/2     ContainerCreating
-hello-jm665-deployment-68d5444d59-4rxqt   1/2     Running
-hello-jm665-deployment-68d5444d59-4rxqt   2/2     Running
+NAME                                     READY   STATUS
+hello-jg94h-deployment-9d998db95-4hv8x   0/2     Pending
+hello-jg94h-deployment-9d998db95-4hv8x   0/2     ContainerCreating
+hello-jg94h-deployment-9d998db95-4hv8x   1/2     Running
+hello-jg94h-deployment-9d998db95-4hv8x   2/2     Running
 ```
 
 Some people call this **Serverless** 🎉 🌮 🔥
