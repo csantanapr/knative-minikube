@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -x
+set -e
+export KNATIVE_VERSION="0.14.0"
+kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
+kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-core.yaml
+sleep 40
+kubectl get pods --namespace knative-serving
+
+kubectl apply --filename https://github.com/knative/net-kourier/releases/download/v$KNATIVE_VERSION/kourier.yaml
+sleep 40
+kubectl get pods --namespace kourier-system
+kubectl get svc kourier -n kourier-system
+
+
+export INGRESS_HOST=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo $INGRESS_HOST
+kubectl patch configmap/config-network \
+  --namespace knative-serving \
+  --type merge \
+  --patch '{"data":{"ingress.class":"kourier.ingress.networking.knative.dev"}}'
+
+sleep 5
+export KNATIVE_DOMAIN="$INGRESS_HOST.nip.io"
+kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
+sleep 5
+cat <<EOF | kubectl apply -f -
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/knative-samples/helloworld-go
+          ports:
+            - containerPort: 8080
+          env:
+            - name: TARGET
+              value: "Knative"
+EOF
+sleep 120
+kubectl get ksvc
+curl $(kubectl get ksvc hello -o jsonpath='{.status.url}')

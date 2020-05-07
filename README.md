@@ -1,9 +1,9 @@
 # Setup Knative with Minikube
 
->Updated and verified on March 8th, 2020 with:
->- Knative version 0.13
->- Minikube version 1.8.1
->- Kubernetes version 1.17.3
+>Updated and verified on May 6th, 2020 with:
+>- Knative version 0.14
+>- Minikube version 1.9.2
+>- Kubernetes version 1.18.2
 
 ## Install Minikube
 
@@ -15,7 +15,6 @@ brew install minikube
 For more information installing or using minikube checkout the docs https://minikube.sigs.k8s.io/docs/start/
 
 
-
 ## Setup Minikube
 
 Make sure you have a recent version of minikube:
@@ -25,15 +24,15 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.17.3
+minikube config set kubernetes-version v1.18.2
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The default configuration for memory of `2GB` and `2 cpus`, should work fine, if you want to change the values you can do it with `minikube config` for example:
+>The configuration for memory of `2GB` and `2 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
 ```
 minikube config set memory 2048
-minikube config set cpus 4
+minikube config set cpus 2
 ```
 
 ## Sart Minikube
@@ -64,7 +63,7 @@ You can check out other addons and settings using `minikube addon list`
 
 Select the version of Knative Serving to install
 ```bash
-export KNATIVE_VERSION="0.13.0"
+export KNATIVE_VERSION="0.14.0"
 ```
 
 Install crds
@@ -84,72 +83,66 @@ kubectl get pods --namespace knative-serving -w
 
 Output should be:
 ```
-NAME                                READY   STATUS    RESTARTS   AGE
-activator-7db6679666-fwtxh          1/1     Running   0          8m15s
-autoscaler-ffc9f79b4-qtpgv          1/1     Running   0          8m15s
-autoscaler-hpa-5994dfdb67-tfbrr     1/1     Running   0          8m15s
-controller-6797f99458-9qxql         1/1     Running   0          8m14s
-networking-istio-85484dc749-fnc2p   1/1     Running   0          8m14s
-webhook-6f97457cbf-sxxxq            1/1     Running   0          8m14s
+NAME                         READY   STATUS    RESTARTS   AGE
+activator-6f5d97f57b-pctgb   1/1     Running   0          49s
+autoscaler-c6f75f5f4-9grc2   1/1     Running   0          49s
+controller-5dd9c9f5-g8brp    1/1     Running   0          49s
+webhook-7b688c478f-zjp8b     1/1     Running   0          48s
 ```
 
-## Install Istio (Lean)
+## Install Kourier
 Startig with Knative version `0.13` you can choose from multiple networing layers like Istio, Contour, Kourier, and Ambasador.
 More info [#installing-the-serving-component](https://knative.dev/docs/install/any-kubernetes-cluster/#installing-the-serving-component)
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.4/istio-crds.yaml
+kubectl apply --filename https://github.com/knative/net-kourier/releases/download/v$KNATIVE_VERSION/kourier.yaml
 ```
 
+Verify Kourier is Running
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/knative/serving/master/third_party/istio-1.4.4/istio-minimal.yaml
-```
-
-
-Verify Istio is Running
-```bash
-kubectl get pods --namespace istio-system -w
+kubectl get pods --namespace kourier-system -w
 ```
 
 Output should be:
 ```
-NAME                                     READY   STATUS      RESTARTS   AGE
-cluster-local-gateway-866d94b5f5-2ht7h   1/1     Running     0          17m
-istio-ingressgateway-54589b686-bhcmz     2/2     Running     0          19m
-istio-init-crd-10-1.4.2-dr4zb            0/1     Completed   0          20m
-istio-init-crd-11-1.4.2-dks6s            0/1     Completed   0          20m
-istio-init-crd-14-1.4.2-5p62d            0/1     Completed   0          20m
-istio-pilot-7b5967465c-gfhrf             1/1     Running     0          19m
+NAME                                      READY   STATUS    RESTARTS   AGE
+3scale-kourier-control-f6cc554c-kpqth     1/1     Running   0          20s
+3scale-kourier-gateway-7ff5b9f7db-sztvr   1/1     Running   0          21s
 ```
 
-Get the `EXTERNAL-IP` for the istio-ingressgateway
+Get the `EXTERNAL-IP` for the kourier svc
 ```bash
-kubectl get svc istio-ingressgateway -n istio-system
+kubectl get svc kourier -n kourier-system
 ```
 
 Output should be:
 ```
-NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                                      AGE
-istio-ingressgateway   LoadBalancer   10.96.147.24   10.96.147.24   15020:31149/TCP,80:32309/TCP,443:30119/TCP   11m
+NAME      TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                      AGE
+kourier   LoadBalancer   10.107.1.152   10.107.1.152   80:30225/TCP,443:31215/TCP   2m25s
 ```
 
 Save the `EXTERNAL-IP` address value in an environment variable `INGRESS_HOST`
 ```bash
-export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+export INGRESS_HOST=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo $INGRESS_HOST
 ```
 
 
-## Configure Knative for Istio
+## Configure Knative for Kourier
 
 
-Since we are using Istio, we need to install  Knative Istio controller.
-
+To configure Knative Serving to use Kourier by default:
+```bash
+kubectl patch configmap/config-network \
+  --namespace knative-serving \
+  --type merge \
+  --patch '{"data":{"ingress.class":"kourier.ingress.networking.knative.dev"}}'
 ```
-kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-istio.yaml
-```
+
+## Configure DNS local access
 
 Optional: You can manually configure the config map domain names.
-Setup domain name to use the External IP Address of the istio-ingressgateway service above
+Setup domain name to use the External IP Address of the kourier service above
 ```bash
 export KNATIVE_DOMAIN="$INGRESS_HOST.nip.io"
 ```
@@ -160,6 +153,8 @@ kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNAT
 
 
 ## Deploy Knative Application
+
+Deploy a Knative Service using the following yaml manifest:
 
 ```bash
 cat <<EOF | kubectl apply -f -
@@ -181,6 +176,7 @@ EOF
 ```
 
 
+
 Verify status of Knative Service until is Ready
 ```bash
 kubectl get ksvc -w
@@ -188,11 +184,11 @@ kubectl get ksvc -w
 
 Wait util column `READY` is `True` it might take a minute or two:
 ```
-NAME    URL                                          LATESTCREATED   LATESTREADY   READY     REASON
-hello   http://hello.default.10.108.164.193.nip.io   hello-jm665                   Unknown   RevisionMissing
-hello   http://hello.default.10.108.164.193.nip.io   hello-jm665     hello-jm665   Unknown   RevisionMissing
-hello   http://hello.default.10.108.164.193.nip.io   hello-jm665     hello-jm665   Unknown   IngressNotConfigured
-hello   http://hello.default.10.108.164.193.nip.io   hello-jm665     hello-jm665   True
+NAME    URL                                        LATESTCREATED   LATESTREADY   READY     REASON
+hello   http://hello.default.10.107.1.152.nip.io   hello-r4vz7                   Unknown   RevisionMissing
+hello   http://hello.default.10.107.1.152.nip.io   hello-r4vz7     hello-r4vz7   Unknown   RevisionMissing
+hello   http://hello.default.10.107.1.152.nip.io   hello-r4vz7     hello-r4vz7   Unknown   IngressNotConfigured
+hello   http://hello.default.10.107.1.152.nip.io   hello-r4vz7     hello-r4vz7   True  
 ```
 
 
@@ -213,8 +209,8 @@ kubectl get pod -l serving.knative.dev/service=hello
 
 Output should be:
 ```
-NAME                                      READY   STATUS    RESTARTS   AGE
-hello-jg94h-deployment-9d998db95-f6klc   2/2     Running   0          6s
+NAME                                     READY   STATUS    RESTARTS   AGE
+hello-r4vz7-deployment-c5d4b88f7-ks95l   2/2     Running   0          7s
 ```
 
 Try the service `url` on your browser
@@ -230,19 +226,19 @@ kubectl get pod -l serving.knative.dev/service=hello -w
 Output should look like this:
 ```
 NAME                                     READY   STATUS
-hello-jg94h-deployment-9d998db95-f6klc   2/2     Running
-hello-jg94h-deployment-9d998db95-f6klc   2/2     Terminating
-hello-jg94h-deployment-9d998db95-f6klc   1/2     Terminating
-hello-jg94h-deployment-9d998db95-f6klc   0/2     Terminating
+hello-r4vz7-deployment-c5d4b88f7-ks95l   2/2     Running
+hello-r4vz7-deployment-c5d4b88f7-ks95l   2/2     Terminating
+hello-r4vz7-deployment-c5d4b88f7-ks95l   1/2     Terminating
+hello-r4vz7-deployment-c5d4b88f7-ks95l   0/2     Terminating
 ```
 
 Try to access the url again, and you will see the new pods running again.
 ```
 NAME                                     READY   STATUS
-hello-jg94h-deployment-9d998db95-4hv8x   0/2     Pending
-hello-jg94h-deployment-9d998db95-4hv8x   0/2     ContainerCreating
-hello-jg94h-deployment-9d998db95-4hv8x   1/2     Running
-hello-jg94h-deployment-9d998db95-4hv8x   2/2     Running
+hello-r4vz7-deployment-c5d4b88f7-rr8cd   0/2     Pending
+hello-r4vz7-deployment-c5d4b88f7-rr8cd   0/2     ContainerCreating
+hello-r4vz7-deployment-c5d4b88f7-rr8cd   1/2     Running
+hello-r4vz7-deployment-c5d4b88f7-rr8cd   2/2     Running
 ```
 
 Some people call this **Serverless** 🎉 🌮 🔥
