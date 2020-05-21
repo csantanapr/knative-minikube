@@ -2,8 +2,8 @@
 
 >Updated and verified on May 6th, 2020 with:
 >- Knative version 0.14
->- Minikube version 1.9.2
->- Kubernetes version 1.18.2
+>- Minikube version 1.10.1
+>- Kubernetes version 1.18.3
 
 ## Install Minikube
 
@@ -24,15 +24,15 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.18.2
+minikube config set kubernetes-version v1.18.3
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The configuration for memory of `2GB` and `2 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
+>The configuration for memory of `2GB` and `2 cpus`, should work fine for Serving. If you plan to install Eventing with In Memory Channel the Dispatcher request is `1 cpu`, you would need to increase the cpu config. You can change the config using `minikube config`:
 ```
 minikube config set memory 2048
-minikube config set cpus 2
+minikube config set cpus 3
 ```
 
 ## Sart Minikube
@@ -66,12 +66,12 @@ Select the version of Knative Serving to install
 export KNATIVE_VERSION="0.14.0"
 ```
 
-Install crds
+Install Serving crds
 ```bash
 kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
 ```
 
-Install the controller
+Install the Serving core
 ```bash
 kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-core.yaml
 ```
@@ -244,3 +244,26 @@ hello-r4vz7-deployment-c5d4b88f7-rr8cd   2/2     Running
 Some people call this **Serverless** 🎉 🌮 🔥
 
 If you have any issues with this instructions [open an new issue](https://github.com/csantanapr/knative-minikube/issues/new) please 🙏🏻
+
+
+## Setup Knative Eventing
+
+Install Eventing crds
+```bash
+kubectl apply --filename https://github.com/knative/eventing/releases/download/v$KNATIVE_VERSION/eventing-crds.yaml
+```
+
+Install Eventing core
+```bash
+kubectl apply --filename https://github.com/knative/eventing/releases/download/v$KNATIVE_VERSION/eventing-core.yaml
+```
+
+Install In-Memory (standlone)
+```bash
+kubectl apply --filename https://github.com/knative/eventing/releases/download/v$KNATIVE_VERSION/in-memory-channel.yaml
+```
+
+Verify that app pods for Knative eventing are Running
+```
+kubectl get pods --namespace knative-eventing -w
+```
