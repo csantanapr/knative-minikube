@@ -1,9 +1,9 @@
 # Setup Knative with Minikube
 
->Updated and verified on May 6th, 2020 with:
->- Knative version 0.14
->- Minikube version 1.9.2
->- Kubernetes version 1.18.2
+>Updated and verified on 2020/07/18 with:
+>- Knative version 0.16
+>- Minikube version 1.12.1
+>- Kubernetes version 1.18.6
 
 ## Install Minikube
 
@@ -24,7 +24,7 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.18.2
+minikube config set kubernetes-version v1.18.6
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
@@ -61,71 +61,34 @@ You can check out other addons and settings using `minikube addon list`
 ### Install Knative
 
 
-Select the version of Knative Serving to install
-```bash
-export KNATIVE_VERSION="0.14.0"
-```
+1. Select the version of Knative Serving to install
+    ```bash
+    export KNATIVE_VERSION="0.16.0"
+    ```
 
-Install crds
-```bash
-kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
-```
+1. Install Knative Serving in namespace `knative-serving`
+    ```bash
+    kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
+    kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-core.yaml
+    kubectl wait deployment activator autoscaler controller webhook --for=condition=Available -n knative-serving 
+    ```
 
-Install the controller
-```bash
-kubectl apply --filename https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-core.yaml
-```
-
-Verify that app pods for Knative serving are Running
-```
-kubectl get pods --namespace knative-serving -w
-```
-
-Output should be:
-```
-NAME                         READY   STATUS    RESTARTS   AGE
-activator-6f5d97f57b-pctgb   1/1     Running   0          49s
-autoscaler-c6f75f5f4-9grc2   1/1     Running   0          49s
-controller-5dd9c9f5-g8brp    1/1     Running   0          49s
-webhook-7b688c478f-zjp8b     1/1     Running   0          48s
-```
 
 ## Install Kourier
 Startig with Knative version `0.13` you can choose from multiple networing layers like Istio, Contour, Kourier, and Ambasador.
 More info [#installing-the-serving-component](https://knative.dev/docs/install/any-kubernetes-cluster/#installing-the-serving-component)
 
-```bash
-kubectl apply --filename https://github.com/knative/net-kourier/releases/download/v$KNATIVE_VERSION/kourier.yaml
-```
+1. Install Knative Layer kourier in namespace `kourier-system`
+    ```bash
+    kubectl apply -f https://github.com/knative/net-kourier/releases/download/v$KNATIVE_VERSION/kourier.yaml
+    kubectl wait deployment 3scale-kourier-control 3scale-kourier-gateway --for=condition=Available -n kourier-system 
+    ```
 
-Verify Kourier is Running
-```bash
-kubectl get pods --namespace kourier-system -w
-```
-
-Output should be:
-```
-NAME                                      READY   STATUS    RESTARTS   AGE
-3scale-kourier-control-f6cc554c-kpqth     1/1     Running   0          20s
-3scale-kourier-gateway-7ff5b9f7db-sztvr   1/1     Running   0          21s
-```
-
-Get the `EXTERNAL-IP` for the kourier svc
-```bash
-kubectl get svc kourier -n kourier-system
-```
-
-Output should be:
-```
-NAME      TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                      AGE
-kourier   LoadBalancer   10.107.1.152   10.107.1.152   80:30225/TCP,443:31215/TCP   2m25s
-```
-
-Save the `EXTERNAL-IP` address value in an environment variable `INGRESS_HOST`
-```bash
-export INGRESS_HOST=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-echo $INGRESS_HOST
-```
+1. Save the external address value in an environment variable `EXTERNAL-IP`
+    ```bash
+    export EXTERNAL_IP=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    echo EXTERNAL_IP=$EXTERNAL_IP
+    ```
 
 
 ## Configure Knative for Kourier
@@ -142,13 +105,13 @@ kubectl patch configmap/config-network \
 ## Configure DNS local access
 
 Optional: You can manually configure the config map domain names.
-Setup domain name to use the External IP Address of the kourier service above
-```bash
-export KNATIVE_DOMAIN="$INGRESS_HOST.nip.io"
-```
-```bash
-kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
-```
+
+1. Setup domain name to use the External IP Address of the kourier service above
+    ```bash
+    export KNATIVE_DOMAIN="$EXTERNAL_IP.nip.io"
+
+    kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
+    ```
 
 
 
