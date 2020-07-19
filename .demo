@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -ex
+export KNATIVE_VERSION="0.16.0"
+kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-crds.yaml
+kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-core.yaml
+kubectl wait deployment activator autoscaler controller webhook --for=condition=Available -n knative-serving --timeout=5m
+
+kubectl apply -f https://github.com/knative/net-kourier/releases/download/v$KNATIVE_VERSION/kourier.yaml
+kubectl wait deployment 3scale-kourier-control 3scale-kourier-gateway --for=condition=Available -n kourier-system --timeout=5m
+
+
+export EXTERNAL_IP=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+while [[] "$EXTERNAL_IP"=="" ]]
+do
+echo "trying again to get EXTERNAL_IP"
+export EXTERNAL_IP=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+done
+
+echo EXTERNAL_IP="$EXTERNAL_IP"
+
+kubectl patch configmap/config-network \
+  --namespace knative-serving \
+  --type merge \
+  --patch '{"data":{"ingress.class":"kourier.ingress.networking.knative.dev"}}'
+
+
+export KNATIVE_DOMAIN="$EXTERNAL_IP.nip.io"
+kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
+
+
+kubectl get pods -n knative-serving 
+kubectl get pods -n kourier-system
+
+
+cat <<EOF | kubectl apply -f -
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/knative-samples/helloworld-go
+          ports:
+            - containerPort: 8080
+          env:
+            - name: TARGET
+              value: "Knative"
+EOF
+
+echo "Wait for Knative Service to be Ready"
+kubectl wait ksvc hello --for=condition=Ready --timeout=2m
+curl $(kubectl get ksvc hello -o jsonpath='{.status.url}')
