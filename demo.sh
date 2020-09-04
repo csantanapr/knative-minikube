@@ -26,8 +26,7 @@ kubectl patch configmap/config-network \
   --patch '{"data":{"ingress.class":"kourier.ingress.networking.knative.dev"}}'
 
 KNATIVE_DOMAIN=$INGRESS_HOST.nip.io
-
-echo "The KNATIVE_DOMAIN $INGRESS_HOST.nip.io"
+echo "The KNATIVE_DOMAIN $KNATIVE_DOMAIN"
 kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
 
 cat <<EOF | kubectl apply -f -
