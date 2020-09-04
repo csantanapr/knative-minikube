@@ -55,7 +55,7 @@ In a new terminal run
 minikube tunnel
 ```
 
-You can check out other addons and settings using `minikube addon list`
+You can check out other addons and settings using `minikube addons list`
 
 
 ### Install Knative
