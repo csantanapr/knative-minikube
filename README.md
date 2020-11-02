@@ -1,4 +1,4 @@
-# Setup Knative with Minikube
+# Setup Knative on Minikube
 
 >Updated and verified on 2020/11/02 with:
 >- Knative version 0.18.1
