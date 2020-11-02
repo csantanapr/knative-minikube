@@ -1,9 +1,9 @@
 # Setup Knative with Minikube
 
->Updated and verified on 2020/09/04 with:
->- Knative version 0.17.2
->- Minikube version 1.13.0
->- Kubernetes version 1.19.0
+>Updated and verified on 2020/11/02 with:
+>- Knative version 0.18.1
+>- Minikube version 1.14.2
+>- Kubernetes version 1.19.3
 
 ## Install Minikube
 
@@ -24,7 +24,7 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.19.0
+minikube config set kubernetes-version v1.19.3
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
@@ -60,10 +60,11 @@ You can check out other addons and settings using `minikube addons list`
 
 ### Install Knative
 
+TLDR; `./demo.sh`
 
 1. Select the version of Knative Serving to install
     ```bash
-    export KNATIVE_VERSION="0.17.2"
+    export KNATIVE_VERSION="0.18.1"
     ```
 
 1. Install Knative Serving in namespace `knative-serving`
@@ -82,7 +83,7 @@ More info [#installing-the-serving-component](https://knative.dev/docs/install/a
 
 1. Select the version of Knative Net Kurier to install
     ```bash
-    export KNATIVE_NET_KOURIER_VERSION="0.17.0"
+    export KNATIVE_NET_KOURIER_VERSION="0.18.0"
     ```
 
 1. Install Knative Layer kourier in namespace `kourier-system`
@@ -128,7 +129,15 @@ Optional: You can manually configure the config map domain names.
 
 ## Deploy Knative Application
 
-Deploy a Knative Service using the following yaml manifest:
+Deploy using [kn](https://github.com/knative/client)
+```bash
+kn service create hello \
+--image gcr.io/knative-samples/helloworld-go \
+--port 8080 \
+--env TARGET=Knative
+```
+
+**Optional:** Deploy a Knative Service using the equivalent yaml manifest:
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: serving.knative.dev/v1
@@ -146,11 +155,6 @@ spec:
             - name: TARGET
               value: "Knative"
 EOF
-```
-
-**Optional** Deploy using [kn](https://github.com/knative/client)
-```bash
-kn service create hello --port 8080 --image gcr.io/knative-samples/helloworld-go
 ```
 
 Wait for Knative Service to be Ready
