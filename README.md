@@ -1,9 +1,9 @@
 # Setup Knative on Minikube
 
->Updated and verified on 2020/11/02 with:
->- Knative version 0.18.1
->- Minikube version 1.14.2
->- Kubernetes version 1.19.3
+>Updated and verified on 2020/12/11 with:
+>- Knative version 0.19.0
+>- Minikube version 1.15.1
+>- Kubernetes version 1.20.0
 
 ## Install Minikube
 
@@ -24,7 +24,7 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.19.3
+minikube config set kubernetes-version v1.20.0
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
@@ -64,7 +64,7 @@ TLDR; `./demo.sh`
 
 1. Select the version of Knative Serving to install
     ```bash
-    export KNATIVE_VERSION="0.18.1"
+    export KNATIVE_VERSION="0.19.0"
     ```
 
 1. Install Knative Serving in namespace `knative-serving`
@@ -83,7 +83,7 @@ More info [#installing-the-serving-component](https://knative.dev/docs/install/a
 
 1. Select the version of Knative Net Kurier to install
     ```bash
-    export KNATIVE_NET_KOURIER_VERSION="0.18.0"
+    export KNATIVE_NET_KOURIER_VERSION="0.19.1"
     ```
 
 1. Install Knative Layer kourier in namespace `kourier-system`
