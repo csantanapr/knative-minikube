@@ -5,7 +5,7 @@ set -u
 
 echo -e "🍿 Installing Knative Serving and Eventing ... \033[0m"
 STARTTIME=$(date +%s)
-curl -sL https://raw.githubusercontent.com/csantanapr/knative-minkube/master/install.sh | bash
+curl -sL https://raw.githubusercontent.com/csantanapr/knative-minikube/master/install.sh | bash
 echo -e "🕹 Installing Knative Samples Apps... \033[0m"
 curl -sL https://raw.githubusercontent.com/csantanapr/knative-kind/master/03-serving-samples.sh | bash
 curl -sL https://raw.githubusercontent.com/csantanapr/knative-kind/master/05-eventing-samples.sh | bash
