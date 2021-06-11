@@ -387,9 +387,9 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
 ### Delete Cluster
 
-- Delete the cluster `knative`
+- Delete the cluster
     ```
-    kind delete cluster --name knative
+    minikube delete
     ```
 If you have any issues with these instructions [open an new issue](https://github.com/csantanapr/knative-minikube/issues/new) please 🙏🏻
 
