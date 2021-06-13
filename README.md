@@ -1,5 +1,6 @@
 # Setup Knative on Minikube
 
+Checkout my tutorials for other kubernetes like [docker-desktop](https://github.com/csantanapr/knative-docker-desktop) and [kind](https://github.com/csantanapr/knative-kind).
 
 TLDR;
 ```
@@ -8,7 +9,7 @@ minikube tunnel &
 curl -sL https://raw.githubusercontent.com/csantanapr/knative-minikube/master/demo.sh | sh
 ```
 
->Updated and verified on 2021/06/10 with:
+>Updated and verified on 2021/06/13 with:
 >- Knative Serving 0.23.0
 >- Knative Kourier 0.23.0
 >- Minikube version 1.20.0
@@ -330,29 +331,33 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
     ```
 
-- Create ` curl` Pod
+- Expose broker externally using Knative Kingress CRD on `broker-ingress.knative-eventing.127.0.0.1.nip.io`
     ```yaml
-    kubectl -n $NAMESPACE apply -f - << EOF
-    apiVersion: v1
-    kind: Pod
+    kubectl -n knative-eventing apply -f - << EOF
+    apiVersion: networking.internal.knative.dev/v1alpha1
+    kind: Ingress
     metadata:
-      labels:
-        run: curl
-      name: curl
+      name: broker-ingress
+      annotations:
+        networking.knative.dev/ingress.class: kourier.ingress.networking.knative.dev
     spec:
-      containers:
-        # This could be any image that we can SSH into and has curl.
-      - image: radial/busyboxplus:curl
-        imagePullPolicy: IfNotPresent
-        name: curl
-        tty: true
+      rules:
+      - hosts:
+        - broker-ingress.knative-eventing.127.0.0.1.nip.io
+        http:
+          paths:
+          - splits:
+            - serviceName: broker-ingress
+              serviceNamespace: knative-eventing
+              servicePort: 80
+        visibility: ExternalIP
     EOF
 
     ```
 
 - Send a Cloud Event usnig `curl` pod created in the previous step.
     ```bash
-    kubectl -n $NAMESPACE exec curl -- curl -s -v  "http://broker-ingress.knative-eventing.svc.cluster.local/$NAMESPACE/example-broker" \
+    curl -s -v  "http://broker-ingress.knative-eventing.127.0.0.1.nip.io/$NAMESPACE/example-broker" \
       -X POST \
       -H "Ce-Id: say-hello" \
       -H "Ce-Specversion: 1.0" \
