@@ -8,11 +8,11 @@ minikube tunnel &
 curl -sL https://raw.githubusercontent.com/csantanapr/knative-minikube/master/demo.sh | sh
 ```
 
->Updated and verified on 2021/06/10 with:
->- Knative Serving 0.23.0
->- Knative Kourier 0.23.0
->- Minikube version 1.20.0
->- Kubernetes version 1.21.1
+>Updated and verified on 2021/07/22 with:
+>- Knative Serving 0.24.0
+>- Knative Kourier 0.24.0
+>- Minikube version 1.22.0
+>- Kubernetes version 1.21.2
 
 ## Install Minikube
 
@@ -38,10 +38,10 @@ minikube config set kubernetes-version v1.21.1
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The configuration for memory of `2GB` and `2 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
+>The configuration for memory of `2GB` and `4 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
 ```
 minikube config set memory 2048
-minikube config set cpus 2
+minikube config set cpus 4
 ```
 
 ## Sart Minikube
@@ -70,7 +70,7 @@ You can check out other addons and settings using `minikube addons list`
 
 1. Select the version of Knative Serving to install
     ```bash
-    export KNATIVE_VERSION="0.23.0"
+    export KNATIVE_VERSION="0.24.0"
     ```
 1. Install Knative Serving in namespace `knative-serving`
     ```bash
@@ -83,7 +83,7 @@ You can check out other addons and settings using `minikube addons list`
     ```
 1. Select the version of Knative Net Kourier to install
     ```bash
-    export KNATIVE_NET_KOURIER_VERSION="0.23.0"
+    export KNATIVE_NET_KOURIER_VERSION="0.24.0"
     ```
 
 1. Install Knative Layer kourier in namespace `kourier-system`
@@ -222,7 +222,7 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
 1. Select the version of Knative Eventing to install
     ```bash
-    export KNATIVE_EVENTING_VERSION="0.23.0"
+    export KNATIVE_EVENTING_VERSION="0.24.0"
     ```
 1. Install Knative Eventing in namespace `knative-eventing`
     ```bash
@@ -263,7 +263,7 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
 - Verify broker
     ```bash
-    kubectl -n $NAMESPACE get broker default
+    kubectl -n $NAMESPACE get broker example-broker
     ```
 
 - Shoud print the address of the broker
