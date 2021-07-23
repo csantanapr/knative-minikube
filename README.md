@@ -13,6 +13,7 @@ curl -sL https://raw.githubusercontent.com/csantanapr/knative-minikube/master/de
 >Updated and verified on 2021/07/22 with:
 >- Knative Serving 0.24.0
 >- Knative Kourier 0.24.0
+>- Knative Eventing 0.24.0
 >- Minikube version 1.22.0
 >- Kubernetes version 1.21.2
 
@@ -225,7 +226,7 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
 1. Select the version of Knative Eventing to install
     ```bash
-    export KNATIVE_EVENTING_VERSION="0.24.0"
+    export KNATIVE_EVENTING_VERSION="0.24.1"
     ```
 1. Install Knative Eventing in namespace `knative-eventing`
     ```bash
