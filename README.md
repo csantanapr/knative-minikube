@@ -1,5 +1,6 @@
 # Setup Knative on Minikube
 
+Checkout my tutorials for other kubernetes like [docker-desktop](https://github.com/csantanapr/knative-docker-desktop) and [kind](https://github.com/csantanapr/knative-kind).
 
 TLDR;
 ```
@@ -8,11 +9,13 @@ minikube tunnel &
 curl -sL https://raw.githubusercontent.com/csantanapr/knative-minikube/master/demo.sh | sh
 ```
 
+
 >Updated and verified on 2021/07/22 with:
 >- Knative Serving 0.24.0
 >- Knative Kourier 0.24.0
 >- Minikube version 1.22.0
 >- Kubernetes version 1.21.2
+
 
 ## Install Minikube
 
@@ -330,29 +333,32 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
     ```
 
-- Create ` curl` Pod
+- Install Knative DomainMapping
+    ```bash
+    kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-domainmapping-crds.yaml
+    kubectl wait --for=condition=Established --all crd
+    kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-domainmapping.yaml
+    ```
+
+- Expose broker externally using DomainMapping CRD on `broker-ingress.knative-eventing.127.0.0.1.nip.io`
     ```yaml
-    kubectl -n $NAMESPACE apply -f - << EOF
-    apiVersion: v1
-    kind: Pod
+    kubectl -n knative-eventing apply -f - << EOF
+    apiVersion: serving.knative.dev/v1alpha1
+    kind: DomainMapping
     metadata:
-      labels:
-        run: curl
-      name: curl
+      name: broker-ingress.knative-eventing.127.0.0.1.nip.io
     spec:
-      containers:
-        # This could be any image that we can SSH into and has curl.
-      - image: radial/busyboxplus:curl
-        imagePullPolicy: IfNotPresent
-        name: curl
-        tty: true
+      ref:
+        name: broker-ingress
+        kind: Service
+        apiVersion: v1
     EOF
 
     ```
 
 - Send a Cloud Event usnig `curl` pod created in the previous step.
     ```bash
-    kubectl -n $NAMESPACE exec curl -- curl -s -v  "http://broker-ingress.knative-eventing.svc.cluster.local/$NAMESPACE/example-broker" \
+    curl -s -v  "http://broker-ingress.knative-eventing.127.0.0.1.nip.io/$NAMESPACE/example-broker" \
       -X POST \
       -H "Ce-Id: say-hello" \
       -H "Ce-Specversion: 1.0" \
