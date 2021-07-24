@@ -341,6 +341,18 @@ Some people call this **Serverless** 🎉 🌮 🔥
     kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-domainmapping.yaml
     ```
 
+- Enable broker domain for DomainMapping
+    ```yaml
+    kubectl apply -f - <<EOF
+    apiVersion: networking.internal.knative.dev/v1alpha1
+    kind: ClusterDomainClaim
+    metadata:
+      name: broker-ingress.knative-eventing.127.0.0.1.nip.io
+    spec:
+      namespace: knative-eventing
+    EOF
+    ```
+
 - Expose broker externally using DomainMapping CRD on `broker-ingress.knative-eventing.127.0.0.1.nip.io`
     ```yaml
     kubectl -n knative-eventing apply -f - << EOF
