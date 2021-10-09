@@ -42,9 +42,9 @@ minikube config set kubernetes-version v1.21.1
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The configuration for memory of `2GB` and `4 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
+>The configuration for memory of `3GB` and `4 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
 ```
-minikube config set memory 2048
+minikube config set memory 3072
 minikube config set cpus 4
 ```
 
