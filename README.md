@@ -48,7 +48,7 @@ minikube config set memory 3072
 minikube config set cpus 4
 ```
 
-## Sart Minikube
+## Start Minikube
 
 
 If you think you have some configuration and want to start with a clean environment you can delete the VM:
@@ -56,7 +56,7 @@ If you think you have some configuration and want to start with a clean environm
 minikube delete
 ```
 
-Now star the minikube vm
+Now start the minikube vm
 ```
 minikube start
 ```
