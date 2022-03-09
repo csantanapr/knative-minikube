@@ -37,15 +37,15 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.22.2
+minikube config set kubernetes-version v1.23.4
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The configuration for memory of `3GB` and `4 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
+>The configuration for memory of `3 cpus` and `3GB`, should work fine, if you want to change the values you can do it with `minikube config`
 ```
+minikube config set cpus 3
 minikube config set memory 3072
-minikube config set cpus 4
 ```
 
 ## Start Minikube
@@ -101,9 +101,9 @@ You can check out other addons and settings using `minikube addons list`
     EXTERNAL_IP=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     echo EXTERNAL_IP=$EXTERNAL_IP
     ```
-2. Set the environment variable `KNATIVE_DOMAIN` as the DNS domain using `nip.io`
+2. Set the environment variable `KNATIVE_DOMAIN` as the DNS domain using `sslip.io`
     ```bash
-    KNATIVE_DOMAIN="$EXTERNAL_IP.nip.io"
+    KNATIVE_DOMAIN="$EXTERNAL_IP.sslip.io"
     echo KNATIVE_DOMAIN=$KNATIVE_DOMAIN
     ```
     Double-check DNS is resolving
