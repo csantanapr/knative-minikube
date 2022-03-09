@@ -25,7 +25,7 @@ done
 
 if [ "$INGRESS_HOST" == "localhost" ]; then INGRESS_HOST=127.0.0.1; fi
 
-KNATIVE_DOMAIN=$INGRESS_HOST.nip.io
+KNATIVE_DOMAIN=$INGRESS_HOST.sslip.io
 kubectl patch configmap -n knative-serving config-domain -p "{\"data\": {\"$KNATIVE_DOMAIN\": \"\"}}"
 
 echo -e "🔥 Installing Knative Eventing... \033[0m"

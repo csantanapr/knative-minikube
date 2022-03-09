@@ -10,12 +10,12 @@ curl -sL https://raw.githubusercontent.com/csantanapr/knative-minikube/master/de
 ```
 
 
->Updated and verified on 2021/11/02 with:
->- Knative Serving 1.0.0
->- Knative Kourier 1.0.0
->- Knative Eventing 1.0.0
->- Minikube version 1.23.1
->- Kubernetes version 1.22.2
+>Updated and verified on 2021/03/09 with:
+>- Knative Serving 1.2.2
+>- Knative Kourier 1.2.0
+>- Knative Eventing 1.2.0
+>- Minikube version 1.25.2
+>- Kubernetes version 1.23.4
 
 
 ## Install Minikube
@@ -37,15 +37,15 @@ minikube update-check
 
 Make sure you have a recent version of kubernetes, you can configure the version to avoid needing the start flag:
 ```
-minikube config set kubernetes-version v1.22.2
+minikube config set kubernetes-version v1.23.4
 ```
 
 >I recommend using the hyperkit vm driver is available in your platform.
 
->The configuration for memory of `3GB` and `4 cpus`, should work fine, if you want to change the values you can do it with `minikube config`
+>The configuration for memory of `3 cpus` and `3GB`, should work fine, if you want to change the values you can do it with `minikube config`
 ```
+minikube config set cpus 3
 minikube config set memory 3072
-minikube config set cpus 4
 ```
 
 ## Start Minikube
@@ -101,9 +101,9 @@ You can check out other addons and settings using `minikube addons list`
     EXTERNAL_IP=$(kubectl -n kourier-system get service kourier -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     echo EXTERNAL_IP=$EXTERNAL_IP
     ```
-2. Set the environment variable `KNATIVE_DOMAIN` as the DNS domain using `nip.io`
+2. Set the environment variable `KNATIVE_DOMAIN` as the DNS domain using `sslip.io`
     ```bash
-    KNATIVE_DOMAIN="$EXTERNAL_IP.nip.io"
+    KNATIVE_DOMAIN="$EXTERNAL_IP.sslip.io"
     echo KNATIVE_DOMAIN=$KNATIVE_DOMAIN
     ```
     Double-check DNS is resolving
@@ -334,32 +334,26 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
     ```
 
-- Install Knative DomainMapping
-    ```bash
-    kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-domainmapping-crds.yaml
-    kubectl wait --for=condition=Established --all crd
-    kubectl apply -f https://github.com/knative/serving/releases/download/v$KNATIVE_VERSION/serving-domainmapping.yaml
-    ```
+- Allow broker to be assign a domain using Knative ClusterDomainClaim CRD
+  ```yaml
+  kubectl apply -f - <<EOF
+  apiVersion: networking.internal.knative.dev/v1alpha1
+  kind: ClusterDomainClaim
+  metadata:
+    name: broker-ingress.knative-eventing.${KNATIVE_DOMAIN}
+  spec:
+    namespace: knative-eventing
+  EOF
+  ```
 
-- Enable broker domain for DomainMapping
-    ```yaml
-    kubectl apply -f - <<EOF
-    apiVersion: networking.internal.knative.dev/v1alpha1
-    kind: ClusterDomainClaim
-    metadata:
-      name: broker-ingress.knative-eventing.127.0.0.1.nip.io
-    spec:
-      namespace: knative-eventing
-    EOF
-    ```
 
-- Expose broker externally using DomainMapping CRD on `broker-ingress.knative-eventing.127.0.0.1.nip.io`
+- Expose broker externally by assigning a domain using DomainMapping CRD
     ```yaml
     kubectl -n knative-eventing apply -f - << EOF
     apiVersion: serving.knative.dev/v1alpha1
     kind: DomainMapping
     metadata:
-      name: broker-ingress.knative-eventing.127.0.0.1.nip.io
+      name: broker-ingress.knative-eventing.$KNATIVE_DOMAIN
     spec:
       ref:
         name: broker-ingress
@@ -371,7 +365,7 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
 - Send a Cloud Event usnig `curl` pod created in the previous step.
     ```bash
-    curl -s -v  "http://broker-ingress.knative-eventing.127.0.0.1.nip.io/$NAMESPACE/example-broker" \
+    curl -s -v  "http://broker-ingress.knative-eventing.$KNATIVE_DOMAIN/$NAMESPACE/example-broker" \
       -X POST \
       -H "Ce-Id: say-hello" \
       -H "Ce-Specversion: 1.0" \
@@ -406,9 +400,8 @@ Some people call this **Serverless** 🎉 🌮 🔥
 
 ### Delete Cluster
 
-- Delete the cluster
+- Delete the cluster `knative`
     ```
     minikube delete
     ```
 If you have any issues with these instructions [open an new issue](https://github.com/csantanapr/knative-minikube/issues/new) please 🙏🏻
-
